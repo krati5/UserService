@@ -1,9 +1,8 @@
 package org.example.userservice.models;
 
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.ManyToMany;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,4 +25,8 @@ public class User extends BaseModel {
     @ManyToMany(fetch = FetchType.EAGER)
     private Set<Role> roles = new HashSet<>();
     private boolean isEmailVerified;
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<Address> addresses;
 }

@@ -1,9 +1,6 @@
 package org.example.userservice.controllers;
 
-import org.example.userservice.exceptions.ErrorResponseDto;
-import org.example.userservice.exceptions.InvalidCredentialsException;
-import org.example.userservice.exceptions.NotFoundException;
-import org.example.userservice.exceptions.UserAlreadyExistsException;
+import org.example.userservice.exceptions.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -30,7 +27,7 @@ public class ExceptionAdvices {
     }
 
 
-    @ExceptionHandler({RuntimeException.class, Exception.class})
+    @ExceptionHandler({RuntimeException.class, Exception.class, TokenGenerationException.class})
     public ResponseEntity<ErrorResponseDto> handleGenericException(Exception exception) {
         ErrorResponseDto errorResponseDto = new ErrorResponseDto();
         errorResponseDto.setMessage("An unexpected error occurred: " + exception.getMessage());

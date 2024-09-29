@@ -8,34 +8,33 @@ import org.example.userservice.exceptions.UserAlreadyExistsException;
 import org.example.userservice.models.SessionStatus;
 import org.example.userservice.models.User;
 import org.example.userservice.services.AuthService;
+import org.example.userservice.services.IAuthService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Set;
 
 @RestController
 @RequestMapping("/auth")
 @AllArgsConstructor
 public class AuthController {
 
-    private AuthService authService;
+    private IAuthService authService;
 
     private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
     @PostMapping("/signup")
-    public ResponseEntity<UserResponseDto> signUp(@RequestBody SignupRequestDto signupRequestDto) throws UserAlreadyExistsException {
+    public ResponseEntity<UserResponseDto> signUp(@RequestBody SignupRequestDto signupRequestDto) throws UserAlreadyExistsException, NotFoundException {
 
         User createdUser = authService.signUp(signupRequestDto.getEmail(), signupRequestDto.getPassword(), signupRequestDto.getFirstName(), signupRequestDto.getLastName());
 
         logger.info("User created {}", createdUser );
         return new ResponseEntity<>(UserResponseDto.fromUser(createdUser),
                 HttpStatus.OK);
-
-
     }
 
         @PostMapping("/login")
@@ -44,9 +43,9 @@ public class AuthController {
         }
 
         @PostMapping("/validate")
-        public ResponseEntity<SessionStatus> validateToken(@RequestBody ValidateTokenRequestDto validateTokenRequestDto)   {
-            SessionStatus sessionStatus = authService.validateToken(validateTokenRequestDto.getToken(), validateTokenRequestDto.getUserId());
-            return new ResponseEntity<SessionStatus>(sessionStatus, HttpStatus.OK);
+        public ResponseEntity<ValidateTokenResponseDto> validateToken(@RequestBody ValidateTokenRequestDto validateTokenRequestDto) throws NotFoundException {
+            ValidateTokenResponseDto validateTokenResponseDto = authService.validateToken(validateTokenRequestDto.getToken(), validateTokenRequestDto.getUserId());
+            return new ResponseEntity<ValidateTokenResponseDto>(validateTokenResponseDto, HttpStatus.OK);
         }
 
         @PostMapping("/logout")
@@ -54,4 +53,11 @@ public class AuthController {
             authService.logout(logoutRequestDto.getToken(), logoutRequestDto.getUserId());
             return new ResponseEntity<>(null, HttpStatus.OK);
         }
+
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @PostMapping("/{userId}/roles")
+    public ResponseEntity<UserResponseDto> assignRolesToUser(@PathVariable Long userId, @RequestBody RoleIdsRequestDto requestDto) {
+        User user = authService.assignRolesToUser(userId, requestDto.getRoleIds());
+        return ResponseEntity.ok(UserResponseDto.fromUser(user));
+    }
 }
